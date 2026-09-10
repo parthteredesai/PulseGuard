@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PulseGuard — AI Heart Assessment</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #030712;
+      --card-bg: rgba(10, 15, 30, 0.85);
+      --fluorescent-blue: #00f3ff;
+      --fluorescent-glow: rgba(0, 243, 255, 0.35);
+      --glass-border: rgba(0, 243, 255, 0.2);
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--fluorescent-blue);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      box-shadow: 0 0 35px rgba(0, 243, 255, 0.15);
+    }
+
+    .brand-title {
+      font-weight: 700;
+      color: var(--fluorescent-blue);
+      text-shadow: 0 0 15px var(--fluorescent-glow);
+    }
+
+    .form-section-title {
+      font-size: 0.88rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #38bdf8;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--glass-border);
+      padding-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+      background: #080e21;
+      border: 1px solid var(--glass-border);
+      color: var(--fluorescent-blue);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      transition: all 0.3s ease;
+      box-shadow: inset 0 0 8px rgba(0, 243, 255, 0.05);
+    }
+
+    .form-control:focus, .form-select:focus {
+      background: #0b1536;
+      border-color: var(--fluorescent-blue);
+      box-shadow: 0 0 18px var(--fluorescent-glow);
+      color: #ffffff;
+    }
+
+    .form-select option {
+      background: #030712;
+      color: var(--fluorescent-blue);
+    }
+
+    .form-label {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--fluorescent-blue);
+      margin-bottom: 0.3rem;
+      text-shadow: 0 0 5px rgba(0, 243, 255, 0.2);
+    }
+
+    .info-icon {
+      color: var(--fluorescent-blue);
+      cursor: pointer;
+      font-size: 0.85rem;
+      margin-left: 4px;
+      opacity: 0.8;
+    }
+
+    .btn-submit {
+      background: linear-gradient(135deg, #00f3ff 0%, #0077ff 100%);
+      border: none;
+      color: #030712;
+      font-weight: 800;
+      border-radius: 14px;
+      padding: 1rem 2rem;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 25px var(--fluorescent-glow);
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 35px rgba(0, 243, 255, 0.6);
+      color: #000000;
+    }
+
+    /* 5-Second Fullscreen Loader Overlay */
+    #loader-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(3, 7, 18, 0.98);
+      backdrop-filter: blur(20px);
+      z-index: 9999;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .pulse-heart {
+      font-size: 4.5rem;
+      color: var(--fluorescent-blue);
+      animation: heartbeat 1.2s infinite ease-in-out;
+      text-shadow: 0 0 30px var(--fluorescent-blue);
+    }
+
+    @keyframes heartbeat {
+      0% { transform: scale(1); }
+      14% { transform: scale(1.3); }
+      28% { transform: scale(1); }
+      42% { transform: scale(1.3); }
+      70% { transform: scale(1); }
+    }
+
+    .loading-text {
+      color: var(--fluorescent-blue);
+      font-weight: 600;
+      margin-top: 1.5rem;
+      letter-spacing: 1px;
+      text-shadow: 0 0 10px var(--fluorescent-glow);
+    }
+
+    .timer-badge {
+      font-size: 0.85rem;
+      color: #38bdf8;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Fullscreen Loader Overlay -->
+  <div id="loader-overlay">
+    <i class="fa-solid fa-heart-pulse pulse-heart"></i>
+    <div class="loading-text">Analyzing Vitals & Running AI Diagnostics...</div>
+    <div class="timer-badge">Please wait (<span id="countdown">5</span>s)</div>
+  </div>
+
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        
+        <!-- App Header -->
+        <div class="text-center mb-5">
+          <h1 class="display-4 brand-title"><i class="fa-solid fa-heart-pulse me-2"></i>PulseGuard AI</h1>
+          <p class="text-light opacity-75">Advanced Machine Learning Diagnostic Model for Cardiovascular Risk Assessment</p>
+        </div>
+
+        <!-- Main Form Card -->
+        <div class="glass-card p-4 p-md-5">
+          <form id="healthForm" action="/predict" method="POST">
+            
+            <!-- Section 1: Demographics & General Vitals -->
+            <div class="form-section-title"><i class="fa-solid fa-user me-2"></i>Patient Profile & Vitals</div>
+            <div class="row g-4 mb-4">
+              
+              <div class="col-md-4">
+                <label class="form-label">
+                  Age <i class="fa-solid fa-circle-info info-icon" data-bs-toggle="tooltip" title="Patient age in years. Risk factors typically increase with age."></i>
+                </label>
+                <input type="number" name="age" class="form-control" value="52" min="1" max="120" required>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">
+                  Biological Sex <i class="fa-solid fa-circle-info info-icon" data-bs-toggle="tooltip" title="Biological sex can influence baseline cardiovascular statistical risks."></i>
+                </label>
+                <select name="sex" class="form-select">
+                  <option value="1" selected>Male</option>
+                  <option value="0">Female</option>
+                </select>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">
+                  Chest Pain Type <i class="fa-solid fa-circle-info info-icon" data-bs-toggle="tooltip" title="Typical: Exertional pressure. Atypical: Non-exertional pain. Non-anginal: Sharp local pain."></i>
+                </label>
+                <select name="cp" class="form-select">
+                  <option value="0" selected>Typical Angina (0)</option>
+                  <option value="1">Atypical Angina (1)</option>
+                  <option value="2">Non-anginal Pain (2)</option>
+                  <option value="3">Asymptomatic (3)</option>
+                </select>
+              </div>
+
+            </div>
+
+            <!-- Section 2: Clinical Lab Vitals -->
+            <div class="form-section-title"><i class="fa-solid fa-stethoscope me-2"></i>Clinical Measurements</div>
+            <div class="row g-4 mb-4">
+              
+              <div class="col-md-4">
+                <label class="form-label">
+                  Resting BP (mmHg) <i class="fa-solid fa-circle-info info-icon" data-bs-toggle="tooltip" title="Resting blood pressure measured in mmHg upon hospital admission. Normal is ~120/80."></i>
+                </label>
+                <input type="number" name="trestbps" class="form-control" value="125" required>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">
+                  Serum Cholesterol (mg/dL) <i class="fa-solid fa-circle-info info-icon" data-bs-toggle="tooltip" title="Total cholesterol level in mg/dL. Values >200 mg/dL may indicate elevated risk."></i>
+                </label>
+                <input type="number" name="chol" class="form-control" value="212" required>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">
+                  Fasting Blood Sugar > 120 mg/dL <i class="fa-solid fa-circle-info info-icon" data-bs-toggle="tooltip" title="Checks if fasting blood sugar level exceeds 120 mg/dL (indicating potential diabetes link)."></i>
+                </label>
+                <select name="fbs" class="form-select">
+                  <option value="0" selected>No / False (0)</option>
+                  <option value="1">Yes / True (1)</option>
+                </select>
+              </div>
+
+            </div>
+
+            <!-- Section 3: Diagnostic Tests -->
+            <div class="form-section-title"><i class="fa-solid fa-chart-line me-2"></i>ECG & Exercise Testing Vitals</div>
+            <div class="row g-4 mb-4">
+
+              <div class="col-md-4">
+                <label class="form-label">
+                  Resting ECG Results <i class="fa-solid fa-circle-info info-icon" data-bs-toggle="tooltip" title="Resting electrocardiographic results evaluating heart rhythms and hypertrophy."></i>
+                </label>
+                <select name="restecg" class="form-select">
+                  <option value="0" selected>Normal (0)</option>
+                  <option value="1">ST-T Wave Abnormality (1)</option>
+                  <option value="2">Left Ventricular Hypertrophy (2)</option>
+                </select>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">
+                  Max Heart Rate Achieved <i class="fa-solid fa-circle-info info-icon" data-bs-toggle="tooltip" title="Highest heart rate reached during an exercise stress test session."></i>
+                </label>
+                <input type="number" name="thalach" class="form-control" value="168" required>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">
+                  Exercise Induced Angina <i class="fa-solid fa-circle-info info-icon" data-bs-toggle="tooltip" title="Chest pain experienced specifically during physical exercise stress testing."></i>
+                </label>
+                <select name="exang" class="form-select">
+                  <option value="0" selected>No (0)</option>
+                  <option value="1">Yes (1)</option>
+                </select>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">
+                  ST Depression (Oldpeak) <i class="fa-solid fa-circle-info info-icon" data-bs-toggle="tooltip" title="ST depression induced by exercise relative to rest. Reflects cardiac strain."></i>
+                </label>
+                <input type="number" step="0.1" name="oldpeak" class="form-control" value="1.0" required>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">
+                  Slope of Peak ST Segment <i class="fa-solid fa-circle-info info-icon" data-bs-toggle="tooltip" title="The slope angle of the peak exercise ST segment on an ECG chart."></i>
+                </label>
+                <select name="slope" class="form-select">
+                  <option value="0">Upsloping (0)</option>
+                  <option value="1">Flat (1)</option>
+                  <option value="2" selected>Downsloping (2)</option>
+                </select>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">
+                  Major Colored Vessels (0-4) <i class="fa-solid fa-circle-info info-icon" data-bs-toggle="tooltip" title="Number of major blood vessels colored during fluoroscopy (0 to 4)."></i>
+                </label>
+                <input type="number" min="0" max="4" name="ca" class="form-control" value="0" required>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">
+                  Thalassemia Status (Thal) <i class="fa-solid fa-circle-info info-icon" data-bs-toggle="tooltip" title="Blood disorder test result assessing blood flow and hemoglobin defects."></i>
+                </label>
+                <select name="thal" class="form-select">
+                  <option value="1">Normal (1)</option>
+                  <option value="2" selected>Fixed Defect (2)</option>
+                  <option value="3">Reversible Defect (3)</option>
+                </select>
+              </div>
+
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-center mt-5">
+              <button type="submit" class="btn btn-submit w-100 py-3">
+                <i class="fa-solid fa-microchip me-2"></i>Run AI Diagnostic Analysis
+              </button>
+            </div>
+
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Initialize Tooltips
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    const tooltipList = [...tooltipTriggerList].map(el => new bootstrap.Tooltip(el));
+
+    // Handle 5-Second Animated Loader Delay
+    document.getElementById('healthForm').addEventListener('submit', function(e) {
+      e.preventDefault(); // Pause form submission
+      
+      const form = this;
+      const loader = document.getElementById('loader-overlay');
+      const countdown = document.getElementById('countdown');
+      
+      loader.style.display = 'flex';
+      
+      let timeLeft = 5;
+      const interval = setInterval(() => {
+        timeLeft--;
+        countdown.innerText = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(interval);
+          form.submit(); // Submit form after 5 seconds
+        }
+      }, 1000);
+    });
+  </script>
+</body>
+</html>
